@@ -1,20 +1,12 @@
 // © 2026 Oscar Knap - Alle rechten voorbehouden
 
-import type { extension } from './extensions/types';
+import type { extension, extensionsToCombined } from './extensions/types';
 import { LiveAudio } from './liveAudio';
 
 const maxRetries = 4;
 const retryResetTime = 1000 * 20;
 
 export type liveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'playing';
-
-type InitReturns<T extends readonly extension[]> = ReturnType<T[number]["init"]>;
-
-type UnionToIntersection<U> =
-    (U extends any ? (x: U) => void : never) extends
-    (x: infer I) => void ? I : never;
-
-type extensionsToCombined<T extends readonly extension[]> = UnionToIntersection<InitReturns<T>>;
 
 export class LiveAudioElement<extensions extends extension[]> {
     src: string;

@@ -1,5 +1,6 @@
 // © 2026 Oscar Knap - Alle rechten voorbehouden
 
+import type { extension } from './extensions/types';
 import { LiveAudioElement } from './liveAudioElement';
 
 /** The minimal target buffer */
@@ -10,7 +11,7 @@ const preferableTargetBuffer = 10;
 
 export type smartLiveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'playing';
 
-export class SmartLiveAudioElement {
+export class SmartLiveAudioElement<extensions extends extension[]> {
     // todo: error handling
 
     // todo: if user has bad internet connection, change targetBuffer based on that
@@ -18,23 +19,25 @@ export class SmartLiveAudioElement {
     // todo: add synced property: if a lot of waiting, synced goes to false, because we are largely behind the stream
 
     src: string;
+    extensions: extensions;
 
     targetBuffer: number;
     currentBuffer: number | null = null;
     state: smartLiveAudioElementState = 'nothing';
     fatalError: boolean = false;
 
-    liveAudioElement: LiveAudioElement;
+    liveAudioElement: LiveAudioElement<extensions>;
 
     onTargetBufferCallbacks: ((currentTargetBuffer: number) => void)[] = [];
     onCurrentBufferCallbacks: ((currentBuffer: number | null) => void)[] = [];
     onStateCallbacks: ((state: smartLiveAudioElementState) => void)[] = [];
     onFatalErrorCallbacks: (() => void)[] = [];
 
-    constructor(src: string) {
+    constructor(src: string, extensions: extensions) {
         this.src = src;
+        this.extensions = extensions;
         this.targetBuffer = preferableTargetBuffer;
-        this.liveAudioElement = new LiveAudioElement(src, this.targetBuffer);
+        this.liveAudioElement = new LiveAudioElement(src, this.targetBuffer, extensions);
 
         this.liveAudioElement.onCurrentBuffer(currentBuffer => {
             this.currentBuffer = currentBuffer;
