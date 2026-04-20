@@ -1,5 +1,6 @@
 // © 2026 Oscar Knap - Alle rechten voorbehouden
 
+import type { extension } from './extensions/types';
 import { LiveAudio } from './liveAudio';
 
 const maxRetries = 4;
@@ -7,13 +8,23 @@ const retryResetTime = 1000 * 20;
 
 export type liveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'playing';
 
-export class LiveAudioElement {
+type InitReturns<T extends readonly extension[]> = ReturnType<T[number]["init"]>;
+
+type UnionToIntersection<U> =
+    (U extends any ? (x: U) => void : never) extends
+    (x: infer I) => void ? I : never;
+
+type extensionsToCombined<T extends readonly extension[]> = UnionToIntersection<InitReturns<T>>;
+
+export class LiveAudioElement<extensions extends extension[]> {
     src: string;
     targetBuffer: number;
+    extensions: extensions;
 
     currentBuffer: number | null = null;
     state: liveAudioElementState = 'nothing';
     fatalError: boolean = false;
+    custom: extensionsToCombined<extensions>;
 
     audio: HTMLAudioElement | null = null;
     liveAudio!: LiveAudio;
@@ -28,9 +39,10 @@ export class LiveAudioElement {
 
     #lastAudioPlayTime: number | null = null;
 
-    constructor(src: string, targetBuffer: number) {
+    constructor(src: string, targetBuffer: number, extensions: extensions) {
         this.src = src;
         this.targetBuffer = targetBuffer;
+        this.extensions = extensions;
 
         try {
             this.#createLiveAudio();
@@ -38,6 +50,18 @@ export class LiveAudioElement {
             console.warn('LiveAudioElement error: #createLiveAudio', e);
             this.#fatalError();
         }
+
+        let newCustom = {};
+
+        for (const extension of extensions) {
+            const returned = extension.init(this) ?? {};
+            newCustom = {
+                ...newCustom,
+                ...returned
+            };
+        }
+
+        this.custom = newCustom as extensionsToCombined<extensions>;
     }
 
     #fatalError() {
