@@ -1,5 +1,10 @@
 {
   "name": "live-audio",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
   "author": "Oscar",
   "peerDependencies": {
     "typescript": "^5"
