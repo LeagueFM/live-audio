@@ -1,0 +1,7 @@
+{
+  "name": "live-audio",
+  "author": "Oscar",
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
