@@ -3,17 +3,7 @@
 import type { LiveAudioElement } from "../liveAudioElement";
 import type { extension } from "./types";
 
-type mutedReturn = {
-    setMuted: (muted: boolean) => void;
-    muted: boolean | null;
-};
-
-type muted = {
-    name: 'muted';
-    init: (liveAudioElement: LiveAudioElement<extension[]>) => mutedReturn;
-};
-
-export const muted: muted = {
+export const muted = {
     name: 'muted',
     init: (liveAudioElement: LiveAudioElement<extension[]>) => {
         return {

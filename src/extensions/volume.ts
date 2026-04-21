@@ -3,19 +3,7 @@
 import type { LiveAudioElement } from "../liveAudioElement";
 import type { extension } from "./types";
 
-type volumeReturn = {
-    /** Number between 0 and 1 */
-    setVolume: (volume: number) => void;
-    /** Number between 0 and 1 */
-    volume: number | null;
-};
-
-type volume = {
-    name: 'volume';
-    init: (liveAudioElement: LiveAudioElement<extension[]>) => volumeReturn;
-};
-
-export const volume: volume = {
+export const volume = {
     name: 'volume',
     init: (liveAudioElement: LiveAudioElement<extension[]>) => {
         return {
