@@ -70,6 +70,27 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                 return;
             }
 
+            if (this.state === 'nothing') {
+                this.totalWaitingTime = 0;
+                this.#lastWaitingStart = null;
+                this.#beforeWaitingTime = 0;
+
+                if (this.#waitingUpdateInterval) {
+                    clearInterval(this.#waitingUpdateInterval);
+                    this.#waitingUpdateInterval = null;
+                }
+
+                for (const callback of this.onTotalWaitingTimeCallbacks) {
+                    try {
+                        callback(this.totalWaitingTime);
+                    } catch (e) {
+                        console.warn('LiveAudioElement error: onTotalWaitingTime callback', e);
+                    }
+                }
+
+                return;
+            }
+
             if (this.state === 'waiting' && this.#lastWaitingStart === null) {
                 this.#updateTotalWaitingTime();
                 this.#beforeWaitingTime = this.totalWaitingTime;
@@ -541,6 +562,13 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                     this.#updateCurrentBuffer();
                 } catch (e) {
                     console.warn('LiveAudioElement error: #updateCurrentBuffer', e);
+                    // not a fatal error
+                }
+
+                try {
+                    this.#updateWaitingTimeState();
+                } catch (e) {
+                    console.warn('LiveAudioElement error: #updateWaitingTimeState', e);
                     // not a fatal error
                 }
             }
