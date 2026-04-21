@@ -11,7 +11,7 @@ const preferableTargetBuffer = 10;
 
 export type smartLiveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'playing';
 
-export class SmartLiveAudioElement<extensions extends extension[]> {
+export class SmartLiveAudioElement<extensions extends readonly extension[]> {
     // todo: error handling
 
     // todo: if user has bad internet connection, change targetBuffer based on that
