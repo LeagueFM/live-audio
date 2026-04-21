@@ -12,10 +12,6 @@ const preferableTargetBuffer = 10;
 export type smartLiveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'playing';
 
 export class SmartLiveAudioElement<extensions extends readonly extension[]> {
-    // todo: error handling
-
-    // todo: add synced property: if a lot of waiting, synced goes to false, because we are largely behind the stream
-
     src: string;
     extensions: extensions;
 
@@ -41,7 +37,11 @@ export class SmartLiveAudioElement<extensions extends readonly extension[]> {
             this.currentBuffer = currentBuffer;
 
             for (const callback of this.onCurrentBufferCallbacks) {
-                callback(this.currentBuffer);
+                try {
+                    callback(this.currentBuffer);
+                } catch (e) {
+                    console.warn('SmartLiveAudioElement error: onCurrentBuffer callback', e);
+                }
             }
         });
 
@@ -53,15 +53,29 @@ export class SmartLiveAudioElement<extensions extends readonly extension[]> {
             this.state = state;
 
             for (const callback of this.onStateCallbacks) {
-                callback(this.state);
+                try {
+                    callback(this.state);
+                } catch (e) {
+                    console.warn('SmartLiveAudioElement error: onState callback', e);
+                }
             }
 
             if (this.state === "nothing" || this.state === "loading") {
-                this.#setTargetBuffer(preferableTargetBuffer);
+                try {
+                    this.#setTargetBuffer(preferableTargetBuffer);
+                } catch (e) {
+                    console.warn('SmartLiveAudioElement error: #setTargetBuffer', e);
+                    // not a fatal error
+                }
             }
 
             if (this.state === "waiting") {
-                this.#setTargetBuffer(minimalTargetBuffer);
+                try {
+                    this.#setTargetBuffer(minimalTargetBuffer);
+                } catch (e) {
+                    console.warn('SmartLiveAudioElement error: #setTargetBuffer', e);
+                    // not a fatal error
+                }
             }
         });
     }
@@ -70,47 +84,80 @@ export class SmartLiveAudioElement<extensions extends readonly extension[]> {
         this.fatalError = true;
 
         for (const callback of this.onFatalErrorCallbacks) {
-            callback();
+            try {
+                callback();
+            } catch (e) {
+                console.warn('SmartLiveAudioElement error: onFatalError callback', e);
+            }
         }
 
         if (!this.liveAudioElement.fatalError) {
-            this.liveAudioElement.setStateNothing();
+            try {
+                this.liveAudioElement.setStateNothing();
+            } catch (e) {
+                console.warn('SmartLiveAudioElement error: liveAudioElement.setStateNothing', e);
+                // not a fatal error
+            }
         }
     }
 
     #setTargetBuffer(newTargetBuffer: number) {
-        if (newTargetBuffer === this.targetBuffer) return;
+        try {
+            if (newTargetBuffer === this.targetBuffer) return;
 
-        this.targetBuffer = newTargetBuffer;
-        this.liveAudioElement.setTargetBuffer(newTargetBuffer);
+            this.targetBuffer = newTargetBuffer;
+            this.liveAudioElement.setTargetBuffer(newTargetBuffer);
 
-        for (const callback of this.onTargetBufferCallbacks) {
-            callback(this.targetBuffer);
+            for (const callback of this.onTargetBufferCallbacks) {
+                try {
+                    callback(this.targetBuffer);
+                } catch (e) {
+                    console.warn('SmartLiveAudioElement error: onTargetBuffer callback', e);
+                }
+            }
+        } catch (e) {
+            console.warn('SmartLiveAudioElement error: #setTargetBuffer', e);
+            // not a fatal error
         }
     }
 
     setStatePlaying() {
-        let totalSeconds = this.liveAudioElement.liveAudio.totalSeconds;
+        try {
+            let totalSeconds = this.liveAudioElement.liveAudio.totalSeconds;
 
-        if (totalSeconds > minimalTargetBuffer) {
-            if (totalSeconds > preferableTargetBuffer) {
-                this.#setTargetBuffer(preferableTargetBuffer);
+            if (totalSeconds > minimalTargetBuffer) {
+                if (totalSeconds > preferableTargetBuffer) {
+                    this.#setTargetBuffer(preferableTargetBuffer);
+                } else {
+                    this.#setTargetBuffer(Math.floor(totalSeconds * 10) / 10);
+                }
             } else {
-                this.#setTargetBuffer(Math.floor(totalSeconds * 10) / 10);
+                this.#setTargetBuffer(minimalTargetBuffer);
             }
-        } else {
-            this.#setTargetBuffer(minimalTargetBuffer);
-        }
 
-        this.liveAudioElement.setStatePlaying();
+            this.liveAudioElement.setStatePlaying();
+        } catch (e) {
+            console.warn('SmartLiveAudioElement error: setStatePlaying', e);
+            this.#fatalError();
+        }
     }
 
     setStateLoading() {
-        this.liveAudioElement.setStateLoading();
+        try {
+            this.liveAudioElement.setStateLoading();
+        } catch (e) {
+            console.warn('SmartLiveAudioElement error: setStateLoading', e);
+            this.#fatalError();
+        }
     }
 
     setStateNothing() {
-        this.liveAudioElement.setStateNothing();
+        try {
+            this.liveAudioElement.setStateNothing();
+        } catch (e) {
+            console.warn('SmartLiveAudioElement error: setStateNothing', e);
+            this.#fatalError();
+        }
     }
 
     onTargetBuffer(callback: (currentTargetBuffer: number) => void) {
