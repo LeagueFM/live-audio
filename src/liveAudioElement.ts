@@ -98,7 +98,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
     #updateTotalWaitingTime() {
         try {
             if (this.#lastWaitingStart) {
-                let lastWaitingTime = Date.now() - this.#lastWaitingStart;
+                let lastWaitingTime = (Date.now() - this.#lastWaitingStart) / 1000;
                 this.totalWaitingTime = this.#beforeWaitingTime + lastWaitingTime;
             } else {
                 this.totalWaitingTime = this.#beforeWaitingTime;
