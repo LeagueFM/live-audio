@@ -5,7 +5,7 @@ import type { extension } from "./types";
 
 export const muted = {
     name: 'muted',
-    init: (liveAudioElement: LiveAudioElement<extension[]>) => {
+    init: (liveAudioElement: LiveAudioElement<readonly extension[]>) => {
         return {
             setMuted: (muted: boolean) => {
                 if (liveAudioElement.audio) {

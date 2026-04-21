@@ -4,7 +4,7 @@ import type { LiveAudioElement } from "../liveAudioElement";
 
 export type extension = {
     name: string;
-    init: (liveAudioElement: LiveAudioElement<extension[]>) => object;
+    init: (liveAudioElement: LiveAudioElement<readonly extension[]>) => object;
 };
 
 type InitReturns<T extends readonly extension[]> = ReturnType<T[number]["init"]>;

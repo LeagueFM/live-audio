@@ -8,7 +8,7 @@ const retryResetTime = 1000 * 20;
 
 export type liveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'playing';
 
-export class LiveAudioElement<extensions extends extension[]> {
+export class LiveAudioElement<extensions extends readonly extension[]> {
     src: string;
     targetBuffer: number;
     extensions: extensions;

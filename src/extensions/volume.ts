@@ -5,7 +5,7 @@ import type { extension } from "./types";
 
 export const volume = {
     name: 'volume',
-    init: (liveAudioElement: LiveAudioElement<extension[]>) => {
+    init: (liveAudioElement: LiveAudioElement<readonly extension[]>) => {
         return {
             setVolume: (volume: number) => {
                 if (volume < 0 || volume > 1) {
