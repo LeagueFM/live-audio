@@ -14,8 +14,6 @@ export type smartLiveAudioElementState = 'nothing' | 'loading' | 'waiting' | 'pl
 export class SmartLiveAudioElement<extensions extends readonly extension[]> {
     // todo: error handling
 
-    // todo: if user has bad internet connection, change targetBuffer based on that
-
     // todo: add synced property: if a lot of waiting, synced goes to false, because we are largely behind the stream
 
     src: string;
@@ -58,7 +56,6 @@ export class SmartLiveAudioElement<extensions extends readonly extension[]> {
                 callback(this.state);
             }
 
-            // todo: think more about these buffer changes
             if (this.state === "nothing" || this.state === "loading") {
                 this.#setTargetBuffer(preferableTargetBuffer);
             }
@@ -93,7 +90,6 @@ export class SmartLiveAudioElement<extensions extends readonly extension[]> {
     }
 
     setStatePlaying() {
-        // todo: think more about these buffer changes
         let totalSeconds = this.liveAudioElement.liveAudio.totalSeconds;
 
         if (totalSeconds > minimalTargetBuffer) {

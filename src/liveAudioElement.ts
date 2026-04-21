@@ -13,10 +13,13 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
     targetBuffer: number;
     extensions: extensions;
 
+    // todo: add onTotalWaitingTime function
+
     currentBuffer: number | null = null;
     state: liveAudioElementState = 'nothing';
     fatalError: boolean = false;
     custom: extensionsToCombined<extensions>;
+    totalWaitingTime: number = 0;
 
     audio: HTMLAudioElement | null = null;
     liveAudio!: LiveAudio;
@@ -30,6 +33,10 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
     #unmountLiveAudio: () => void = () => { };
 
     #lastAudioPlayTime: number | null = null;
+
+    #lastWaitingStart: number | null = null;
+    #beforeWaitingTime: number = 0;
+    #waitingUpdateInterval: ReturnType<typeof setInterval> | null = null;
 
     constructor(src: string, targetBuffer: number, extensions: extensions) {
         this.src = src;
@@ -54,6 +61,47 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
         }
 
         this.custom = newCustom as extensionsToCombined<extensions>;
+    }
+
+    #updateWaitingTimeState() {
+        // todo: error handling
+
+        if (this.fatalError) {
+            this.#updateTotalWaitingTime();
+            this.#lastWaitingStart = null;
+            return;
+        }
+
+        if (this.state === 'waiting' && this.#lastWaitingStart === null) {
+            this.#updateTotalWaitingTime();
+            this.#beforeWaitingTime = this.totalWaitingTime;
+            this.#lastWaitingStart = Date.now();
+        }
+        if (this.state !== 'waiting' && this.#lastWaitingStart !== null) {
+            this.#updateTotalWaitingTime();
+            this.#lastWaitingStart = null;
+        }
+
+        if (this.state === 'waiting' && this.#waitingUpdateInterval === null) {
+            this.#waitingUpdateInterval = setInterval(() => {
+                this.#updateTotalWaitingTime();
+            }, 100);
+        }
+        if (this.state !== 'waiting' && this.#waitingUpdateInterval !== null) {
+            clearInterval(this.#waitingUpdateInterval);
+            this.#waitingUpdateInterval = null;
+        }
+    }
+
+    #updateTotalWaitingTime() {
+        // todo: error handling
+
+        if (this.#lastWaitingStart) {
+            let lastWaitingTime = Date.now() - this.#lastWaitingStart;
+            this.totalWaitingTime = this.#beforeWaitingTime + lastWaitingTime;
+        } else {
+            this.totalWaitingTime = this.#beforeWaitingTime;
+        }
     }
 
     #fatalError() {
@@ -89,6 +137,9 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
         } catch (e) {
             console.warn('LiveAudioElement error: #updateCurrentBuffer', e);
         }
+
+        // todo: error handling
+        this.#updateWaitingTimeState();
 
         for (const callback of this.onFatalErrorCallbacks) {
             try {
@@ -344,6 +395,9 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                             console.warn('LiveAudioElement error: #updateCurrentBuffer', e);
                             // not a fatal error
                         }
+
+                        // todo: error handling
+                        this.#updateWaitingTimeState();
                     }
 
                     if (!currentAudio.paused) {
@@ -504,6 +558,9 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                     console.warn('LiveAudioElement error: #updateCurrentBuffer', e);
                     // not a fatal error
                 }
+
+                // todo: error handling
+                this.#updateWaitingTimeState();
             }
             if (this.state === 'waiting') {
                 this.state = 'loading';
@@ -522,6 +579,9 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                     console.warn('LiveAudioElement error: #updateCurrentBuffer', e);
                     // not a fatal error
                 }
+
+                // todo: error handling
+                this.#updateWaitingTimeState();
             }
 
             if (this.state === 'nothing') {
@@ -600,6 +660,9 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                     // not a fatal error
                 }
 
+                // todo: error handling
+                this.#updateWaitingTimeState();
+
                 return;
             }
 
@@ -623,6 +686,9 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                 console.warn('LiveAudioElement error: #updateCurrentBuffer', e);
                 // not a fatal error
             }
+
+            // todo: error handling
+            this.#updateWaitingTimeState();
         } catch (e) {
             console.warn('LiveAudioElement error: #setStatePlayingInternal', e);
             this.#fatalError();
