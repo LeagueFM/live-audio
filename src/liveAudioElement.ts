@@ -13,8 +13,6 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
     targetBuffer: number;
     extensions: extensions;
 
-    // todo: add onTotalWaitingTime function
-
     currentBuffer: number | null = null;
     state: liveAudioElementState = 'nothing';
     fatalError: boolean = false;
@@ -27,6 +25,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
     onCurrentBufferCallbacks: ((currentBuffer: number | null) => void)[] = [];
     onStateCallbacks: ((state: liveAudioElementState) => void)[] = [];
     onFatalErrorCallbacks: (() => void)[] = [];
+    onTotalWaitingTimeCallbacks: ((totalWaitingTime: number) => void)[] = [];
 
     #retries = 0;
     #lastRetryTime: number | null = null;
@@ -101,6 +100,14 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
             this.totalWaitingTime = this.#beforeWaitingTime + lastWaitingTime;
         } else {
             this.totalWaitingTime = this.#beforeWaitingTime;
+        }
+
+        for (const callback of this.onTotalWaitingTimeCallbacks) {
+            try {
+                callback(this.totalWaitingTime);
+            } catch (e) {
+                console.warn('LiveAudioElement error: onTotalWaitingTime callback', e);
+            }
         }
     }
 
@@ -468,6 +475,10 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
         this.onFatalErrorCallbacks.push(callback);
     }
 
+    onTotalWaitingTime(callback: (totalWaitingTime: number) => void) {
+        this.onTotalWaitingTimeCallbacks.push(callback);
+    }
+
     offCurrentBuffer(callback: (currentBuffer: number | null) => void) {
         this.onCurrentBufferCallbacks = this.onCurrentBufferCallbacks.filter(cb => cb !== callback);
     }
@@ -478,6 +489,10 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
 
     offFatalError(callback: () => void) {
         this.onFatalErrorCallbacks = this.onFatalErrorCallbacks.filter(cb => cb !== callback);
+    }
+
+    offTotalWaitingTime(callback: (totalWaitingTime: number) => void) {
+        this.onTotalWaitingTimeCallbacks = this.onTotalWaitingTimeCallbacks.filter(cb => cb !== callback);
     }
 
     setStateNothing() {
