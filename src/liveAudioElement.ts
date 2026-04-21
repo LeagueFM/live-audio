@@ -71,6 +71,8 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
             }
 
             if (this.state === 'nothing') {
+                console.log('resetting because state is nothing')
+
                 this.totalWaitingTime = 0;
                 this.#lastWaitingStart = null;
                 this.#beforeWaitingTime = 0;
@@ -118,10 +120,14 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
 
     #updateTotalWaitingTime() {
         try {
+            console.log('#updateTotalWaitingTime', { lastWaitingStart: this.#lastWaitingStart, beforeWaitingTime: this.#beforeWaitingTime })
+
             if (this.#lastWaitingStart) {
+                console.log(1)
                 let lastWaitingTime = (Date.now() - this.#lastWaitingStart) / 1000;
                 this.totalWaitingTime = this.#beforeWaitingTime + lastWaitingTime;
             } else {
+                console.log(2)
                 this.totalWaitingTime = this.#beforeWaitingTime;
             }
 
