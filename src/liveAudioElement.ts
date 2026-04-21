@@ -121,7 +121,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
 
     #updateTotalWaitingTime() {
         try {
-            console.log('#updateTotalWaitingTime', { lastWaitingStart: this.#lastWaitingStart, beforeWaitingTime: this.#beforeWaitingTime })
+            console.log('#updateTotalWaitingTime', { lastWaitingStart: this.#lastWaitingStart, beforeWaitingTime: this.#beforeWaitingTime, totalWaitingTime: this.totalWaitingTime })
 
             if (this.#lastWaitingStart) {
                 console.log(1)
