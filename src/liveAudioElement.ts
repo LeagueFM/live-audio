@@ -95,6 +95,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
 
             if (this.state === 'waiting' && this.#lastWaitingStart === null) {
                 this.#updateTotalWaitingTime();
+                console.log('setting lastWaitingStart', { totalWaitingTime: this.totalWaitingTime })
                 this.#beforeWaitingTime = this.totalWaitingTime;
                 this.#lastWaitingStart = Date.now();
             }
