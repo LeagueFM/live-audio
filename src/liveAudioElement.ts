@@ -67,6 +67,13 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
             if (this.fatalError) {
                 this.#updateTotalWaitingTime();
                 this.#lastWaitingStart = null;
+                this.#beforeWaitingTime = 0;
+
+                if (this.#waitingUpdateInterval) {
+                    clearInterval(this.#waitingUpdateInterval);
+                    this.#waitingUpdateInterval = null;
+                }
+
                 return;
             }
 
@@ -102,6 +109,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
             if (this.state !== 'waiting' && this.#lastWaitingStart !== null) {
                 this.#updateTotalWaitingTime();
                 this.#lastWaitingStart = null;
+                this.#beforeWaitingTime = 0;
             }
 
             if (this.state === 'waiting' && this.#waitingUpdateInterval === null) {
@@ -123,14 +131,11 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
         try {
             console.log('#updateTotalWaitingTime', { lastWaitingStart: this.#lastWaitingStart, beforeWaitingTime: this.#beforeWaitingTime, totalWaitingTime: this.totalWaitingTime })
 
-            if (this.#lastWaitingStart) {
-                console.log(1)
-                let lastWaitingTime = (Date.now() - this.#lastWaitingStart) / 1000;
-                this.totalWaitingTime = this.#beforeWaitingTime + lastWaitingTime;
-            } else {
-                console.log(2)
-                this.totalWaitingTime = this.#beforeWaitingTime;
-            }
+            if (!this.#lastWaitingStart) return;
+
+            console.log(1)
+            let lastWaitingTime = (Date.now() - this.#lastWaitingStart) / 1000;
+            this.totalWaitingTime = this.#beforeWaitingTime + lastWaitingTime;
 
             for (const callback of this.onTotalWaitingTimeCallbacks) {
                 try {
