@@ -16,10 +16,24 @@ export const mediaSession = {
                     navigator.mediaSession.playbackState = 'playing';
                 }
             });
+
+            navigator.mediaSession.setActionHandler('play', () => {
+                liveAudioElement.setStatePlaying();
+            });
+            navigator.mediaSession.setActionHandler('pause', () => {
+                liveAudioElement.setStateLoading();
+            });
+            navigator.mediaSession.setActionHandler('stop', () => {
+                liveAudioElement.setStateNothing();
+            });
         }
 
         return {
-
+            setMetadata: (metadata: MediaMetadata) => {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = metadata;
+                }
+            }
         };
     }
 } as const satisfies extension;
