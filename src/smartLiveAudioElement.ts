@@ -123,16 +123,18 @@ export class SmartLiveAudioElement<extensions extends readonly extension[]> {
 
     setStatePlaying() {
         try {
-            let totalSeconds = this.liveAudioElement.liveAudio.totalSeconds;
+            if (!this.liveAudioElement.liveAudio.legacy) {
+                let totalSeconds = this.liveAudioElement.liveAudio.totalSeconds;
 
-            if (totalSeconds > minimalTargetBuffer) {
-                if (totalSeconds > preferableTargetBuffer) {
-                    this.#setTargetBuffer(preferableTargetBuffer);
+                if (totalSeconds > minimalTargetBuffer) {
+                    if (totalSeconds > preferableTargetBuffer) {
+                        this.#setTargetBuffer(preferableTargetBuffer);
+                    } else {
+                        this.#setTargetBuffer(Math.floor(totalSeconds * 10) / 10);
+                    }
                 } else {
-                    this.#setTargetBuffer(Math.floor(totalSeconds * 10) / 10);
+                    this.#setTargetBuffer(minimalTargetBuffer);
                 }
-            } else {
-                this.#setTargetBuffer(minimalTargetBuffer);
             }
 
             this.liveAudioElement.setStatePlaying();

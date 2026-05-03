@@ -327,6 +327,20 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
         }
 
         try {
+            if (this.liveAudio.legacy) {
+                this.currentBuffer = null;
+
+                for (const callback of this.onCurrentBufferCallbacks) {
+                    try {
+                        callback(this.currentBuffer);
+                    } catch (e) {
+                        console.warn('LiveAudioElement error: onCurrentBuffer callback', e);
+                    }
+                }
+
+                return;
+            }
+
             if ((this.state === 'playing' || this.state === 'waiting') && this.audio && this.audio.currentTime !== null) {
                 if (this.liveAudio.totalSeconds === 0) {
                     this.currentBuffer = 0;
@@ -710,7 +724,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                 return;
             }
 
-            if (this.liveAudio.totalSeconds < this.targetBuffer) {
+            if (this.liveAudio.totalSeconds < this.targetBuffer && !this.liveAudio.legacy) {
                 if (this.state === 'waiting' && !skipAlreadyGoodStateCheck) return;
 
                 this.state = 'waiting';
@@ -742,7 +756,28 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
 
             if (this.state === 'playing' && !skipAlreadyGoodStateCheck) return;
             this.state = 'playing';
-            this.audio.currentTime = this.liveAudio.totalSeconds - this.targetBuffer;
+
+            if (this.liveAudio.legacy) {
+
+                const buffered = this.audio.buffered;
+
+                let latestBuffered = null;
+
+                for (let i = 0; i < buffered.length; i++) {
+                    const end = buffered.end(i);
+                    if (latestBuffered === null || end > latestBuffered) {
+                        latestBuffered = end;
+                    }
+                }
+
+                if (latestBuffered !== null) {
+                    this.audio.currentTime = latestBuffered - this.targetBuffer;
+                }
+
+            } else {
+                this.audio.currentTime = this.liveAudio.totalSeconds - this.targetBuffer;
+            }
+
             this.#lastAudioPlayTime = Date.now();
             this.audio.play();
 
