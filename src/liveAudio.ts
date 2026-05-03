@@ -14,6 +14,7 @@ export class LiveAudio {
     url: string | null = null;
     totalSeconds: number = 0;
     active: boolean = false;
+    legacy: boolean = false;
     fatalError: boolean = false;
 
     mediaSource: MediaSource | null = null;
@@ -29,6 +30,7 @@ export class LiveAudio {
 
     constructor(src: string) {
         this.src = src;
+        this.updateLegacy();
     }
 
     onTotalSeconds(callback: (totalSeconds: number) => void) {
@@ -55,6 +57,66 @@ export class LiveAudio {
         this.onFatalErrorCallbacks = this.onFatalErrorCallbacks.filter(cb => cb !== callback);
     }
 
+    updateLegacy() {
+        try {
+            if (this.legacy) return;
+
+            if (
+                typeof window === 'undefined'
+                || !("MediaSource" in window)
+                || !MediaSource.isTypeSupported('audio/mpeg')
+            ) {
+                console.warn('LiveAudio legacy mode enabled');
+                this.legacy = true;
+                this.totalSeconds = 0;
+                this.mediaSource = null;
+                this.reader = null;
+                this.#innerStartIdentifier = null;
+            }
+        } catch (e) {
+            console.warn('LiveAudio error: updateLegacy', e);
+            this.#fatalError();
+        }
+    }
+
+    #startLegacy() {
+        if (this.fatalError) {
+            console.warn('LiveAudio error: #startLegacy called after fatal error');
+            return;
+        }
+
+        try {
+            this.active = true;
+            this.totalSeconds = 0;
+            this.mediaSource = null;
+            this.reader = null;
+
+            try {
+                if (this.url && this.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(this.url);
+                    this.url = null;
+                }
+            } catch (e) {
+                console.warn('LiveAudio error: revokeObjectURL', e);
+            }
+
+            this.#innerStartIdentifier = null;
+
+            this.url = this.src;
+
+            for (const callback of this.onUrlCallbacks) {
+                try {
+                    callback(this.url);
+                } catch (e) {
+                    console.warn('LiveAudio error: onUrl callback', e);
+                }
+            }
+        } catch (e) {
+            console.warn('LiveAudio error: #startLegacy', e);
+            this.#fatalError();
+        }
+    }
+
     start() {
         if (this.fatalError) {
             console.warn('LiveAudio error: start called after fatal error');
@@ -62,6 +124,14 @@ export class LiveAudio {
         }
 
         try {
+
+            this.updateLegacy();
+
+            if (this.legacy) {
+                this.#startLegacy();
+                return;
+            }
+
             this.active = true;
             this.totalSeconds = 0;
 
@@ -103,7 +173,7 @@ export class LiveAudio {
 
         try {
             try {
-                if (this.url) {
+                if (this.url && this.url.startsWith('blob:')) {
                     URL.revokeObjectURL(this.url);
                     this.url = null;
                 }
@@ -333,7 +403,9 @@ export class LiveAudio {
             this.lastPacketTime = null;
             this.#innerStartIdentifier = null;
             if (this.url) {
-                URL.revokeObjectURL(this.url);
+                if (this.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(this.url);
+                }
                 this.url = null;
             }
             if (this.#noPacketCheckInterval) {
