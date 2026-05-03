@@ -387,6 +387,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                 this.#removeAudio();
             }
 
+            console.debug('new Audio(', this.liveAudio.url ?? undefined, ')');
             let currentAudio = new Audio(this.liveAudio.url ?? undefined);
 
             currentAudio.addEventListener('error', (e) => {
