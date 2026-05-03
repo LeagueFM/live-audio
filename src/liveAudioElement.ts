@@ -249,11 +249,14 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
             let currentLiveAudio = new LiveAudio(this.src);
 
             const urlListener = (url: string) => {
+                console.debug('urlListener', url);
+
                 if (this.liveAudio !== currentLiveAudio) return;
                 if (this.fatalError) return;
 
                 try {
                     if (this.audio) {
+                        console.debug('Setting audio src', url);
                         this.audio.src = url;
                     }
 
@@ -673,6 +676,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
                 this.state = 'loading';
 
                 if (!this.liveAudio.active) {
+                    console.debug('calling liveAudio start');
                     this.liveAudio.start();
                 }
 
@@ -780,6 +784,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
             }
 
             this.#lastAudioPlayTime = Date.now();
+            console.debug('playing audio');
             this.audio.play();
 
             for (const callback of this.onStateCallbacks) {
