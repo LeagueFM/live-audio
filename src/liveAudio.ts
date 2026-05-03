@@ -125,8 +125,6 @@ export class LiveAudio {
 
         try {
 
-            this.updateLegacy();
-
             if (this.legacy) {
                 this.#startLegacy();
                 return;
