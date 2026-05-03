@@ -256,7 +256,7 @@ export class LiveAudioElement<extensions extends readonly extension[]> {
 
                 try {
                     if (this.audio) {
-                        console.debug('Setting audio src', url);
+                        console.debug(`Setting audio src "${url}"`, url, this.audio);
                         this.audio.src = url;
                     }
 
