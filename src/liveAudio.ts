@@ -72,6 +72,8 @@ export class LiveAudio {
                 this.mediaSource = null;
                 this.reader = null;
                 this.#innerStartIdentifier = null;
+
+                this.url = this.src;
             }
         } catch (e) {
             console.warn('LiveAudio error: updateLegacy', e);
@@ -94,7 +96,7 @@ export class LiveAudio {
             try {
                 if (this.url && this.url.startsWith('blob:')) {
                     URL.revokeObjectURL(this.url);
-                    this.url = null;
+                    this.url = this.src;
                 }
             } catch (e) {
                 console.warn('LiveAudio error: revokeObjectURL', e);
@@ -173,7 +175,11 @@ export class LiveAudio {
             try {
                 if (this.url && this.url.startsWith('blob:')) {
                     URL.revokeObjectURL(this.url);
-                    this.url = null;
+                    if (this.legacy) {
+                        this.url = this.src;
+                    } else {
+                        this.url = null;
+                    }
                 }
             } catch (e) {
                 console.warn('LiveAudio error: revokeObjectURL', e);
@@ -404,7 +410,11 @@ export class LiveAudio {
                 if (this.url.startsWith('blob:')) {
                     URL.revokeObjectURL(this.url);
                 }
-                this.url = null;
+                if (this.legacy) {
+                    this.url = this.src;
+                } else {
+                    this.url = null;
+                }
             }
             if (this.#noPacketCheckInterval) {
                 clearInterval(this.#noPacketCheckInterval);
